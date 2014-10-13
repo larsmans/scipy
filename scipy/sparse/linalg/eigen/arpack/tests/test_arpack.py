@@ -712,6 +712,22 @@ def test_svd_LM_zeros_matrix_gh_3452():
     assert_array_equal(s, 0)
 
 
+def test_svd_linop():
+    # Test svds on a LinearOperator.
+    n, m, k = 6, 7, 3
+    A = np.random.RandomState(52).randn(n, m)
+    L = aslinearoperator(A)
+
+    v0 = np.ones(min(A.shape), dtype=A.dtype)
+
+    for which in ["LM", "SM"]:
+        U1, s1, VH1 = svds(A, k, which=which, v0=v0)
+        U2, s2, VH2 = svds(L, k, which=which, v0=v0)
+        assert_allclose(np.abs(U1), np.abs(U2))
+        assert_allclose(np.abs(s1), np.abs(s2))
+        assert_allclose(np.abs(VH1), np.abs(VH2))
+
+
 def test_linearoperator_deallocation():
     # Check that the linear operators used by the Arpack wrappers are
     # deallocatable by reference counting -- they are big objects, so

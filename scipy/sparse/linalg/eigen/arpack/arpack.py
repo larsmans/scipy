@@ -1623,7 +1623,7 @@ def svds(A, k=6, ncv=None, tol=0, which='LM', v0=None,
 
     Parameters
     ----------
-    A : sparse matrix
+    A : {sparse matrix, LinearOperator}
         Array to compute the SVD on, of shape (M, N)
     k : int, optional
         Number of singular values and vectors to compute.
@@ -1671,20 +1671,28 @@ def svds(A, k=6, ncv=None, tol=0, which='LM', v0=None,
     This is a naive implementation using ARPACK as an eigensolver
     on A.H * A or A * A.H, depending on which one is more efficient.
     """
-    if not (isinstance(A, np.ndarray) or isspmatrix(A)):
-        A = np.asarray(A)
+    if isinstance(A, LinearOperator):
+        def matvec_XH_X(x):     # X^H * X * x
+            return A.rmatvec(A.matvec(x))
 
-    n, m = A.shape
-
-    if n > m:
         X = A
-        XH = _herm(A)
-    else:
-        XH = A
-        X = _herm(A)
+        m, n = A.shape
 
-    def matvec_XH_X(x):
-        return XH.dot(X.dot(x))
+    else:
+        if not (isinstance(A, np.ndarray) or isspmatrix(A)):
+            A = np.asarray(A)
+
+        n, m = A.shape
+
+        if n > m:
+            X = A
+            XH = _herm(A)
+        else:
+            XH = A
+            X = _herm(A)
+
+        def matvec_XH_X(x):
+            return XH.dot(X.dot(x))
 
     XH_X = LinearOperator(matvec=matvec_XH_X, dtype=X.dtype,
                           shape=(X.shape[1], X.shape[1]))
