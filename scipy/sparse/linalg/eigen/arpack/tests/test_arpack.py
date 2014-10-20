@@ -718,13 +718,16 @@ class CheckingLinearOperator(LinearOperator):
         self.dtype = A.dtype
         self.shape = A.shape
 
-    def matvec(self, x):
+    def _matvec(self, x):
         assert_equal(max(x.shape), np.size(x))
         return self.A.dot(x)
 
-    def rmatvec(self, x):
+    def _rmatvec(self, x):
         assert_equal(max(x.shape), np.size(x))
         return self.A.T.conjugate().dot(x)
+
+    def _adjoint(self):
+        return CheckingLinearOperator(self.A.T.conj())
 
 
 def test_svd_linop():
